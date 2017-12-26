@@ -58,7 +58,6 @@ std::ostringstream& Log::stream()
     {
        str += "\n";
     }
-    //write(str.c_str());
     if (_file)
 	fwrite(str.c_str(), str.size(), 1, _file);
     _stream.clear();
