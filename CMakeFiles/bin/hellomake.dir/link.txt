@@ -1,0 +1,1 @@
+g++       CMakeFiles/./bin/hellomake.dir/src/testlog.cpp.o  -o ./bin/hellomake -rdynamic liblog.a liblog.a 

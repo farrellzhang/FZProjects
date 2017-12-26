@@ -34,9 +34,9 @@ void Log::init()
     time_t t;
     tm* local;
     char name[64];
-    t = time(0);
+    time(&t);
     local = localtime(&t);
-    sprintf(name, "%d%d%d%d%d%d.log", local->tm_year, local->tm_mon, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+    sprintf(name, "%d%d%d%d%d%d.log", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
     _file = fopen(name, "wt");
     if (!_file)
     {
