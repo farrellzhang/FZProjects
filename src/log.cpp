@@ -47,16 +47,20 @@ void Log::write(const char* content)
 {
     if (_file && content)
     {
-	printf(content);
 	fwrite(content, sizeof(content), 1, _file);
-	fwrite("zhangfang", 9, 1, _file);
     }
 }
 std::ostringstream& Log::stream()
 {
     //将当前日志写入文件后清空
     std::string str = _stream.str();
-    write(str.c_str());
+    if (!str.empty())
+    {
+       str += "\n";
+    }
+    //write(str.c_str());
+    if (_file)
+	fwrite(str.c_str(), str.size(), 1, _file);
     _stream.clear();
     return _stream;
 }

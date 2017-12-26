@@ -1,6 +1,7 @@
 #include "../include/log.h"
 int main()
 {
-    LOG << "test log!";
+    LOG << "hello test log!";
+    Log::free_instance();
     return 0;
 }
