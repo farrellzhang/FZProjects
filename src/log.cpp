@@ -60,6 +60,6 @@ std::ostringstream& Log::stream()
     }
     if (_file)
 	fwrite(str.c_str(), str.size(), 1, _file);
-    _stream.clear();
+    _stream.str("");
     return _stream;
 }
