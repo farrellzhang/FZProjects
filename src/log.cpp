@@ -69,7 +69,7 @@ std::ostringstream& Log::stream()
     std::string str = _stream.str();
     if (!str.empty())
     {
-       str += "\n";
+	str += "\n";
     }
     if (_file)
     {

@@ -12,14 +12,14 @@
 
 FileServer::FileServer()
 {
- //   _sk = 0;
- //   _efd = 0;
- //   _tid = 0;
+    //   _sk = 0;
+    //   _efd = 0;
+    //   _tid = 0;
 }
 
 FileServer::~FileServer()
 {
-    
+
 }
 void FileServer::start()
 {
@@ -71,7 +71,7 @@ void FileServer::start()
     LOG << "listen";
     while(1)
     {
-        //LOG << "epoll_wait";
+	//LOG << "epoll_wait";
 	nfds = epoll_wait(efd, events, 12, -1);
 	if (nfds < 0)
 	{
@@ -92,7 +92,7 @@ void FileServer::start()
 		    //设置为异步
 		    fcntl(connfd, F_SETFL,
 			    fcntl(connfd, F_GETFL)|O_NONBLOCK);
-		    
+
 		    //加入等待队列
 		    ev.data.fd = connfd;
 		    ev.events = EPOLLIN | EPOLLET;
@@ -108,72 +108,69 @@ void FileServer::start()
 	    {
 		while (1)
 		{
-		    
-		//有数据到来
-		bzero(buf, sizeof(buf));
-		readlen = read(events[i].data.fd, buf, sizeof(buf));
-		if (readlen > 0)
-		{
-		    if (file)
+		    //有数据到来
+		    bzero(buf, sizeof(buf));
+		    readlen = read(events[i].data.fd, buf, sizeof(buf));
+		    if (readlen > 0)
 		    {
-			//直接写数据
-		        fwrite(buf, readlen, 1, file);
+			if (file)
+			{
+			    //直接写数据
+			    fwrite(buf, readlen, 1, file);
+			}
+			else
+			{
+			    //解析数据,以#为分割，依次为文件名、文件大小
+			    result = strtok(buf, "#");
+			    if (result)
+			    {
+				LOG << "file: " << result;
+				file = fopen(result, "wb");
+				if (file)
+				{
+				    result = strtok(0, "#");
+				    if (result)
+				    {
+					LOG << "filesize: " << result;
+				    }
+				    //开始读数据
+				    //bzero(buf, sizeof(buf));
+				    //while ((readlen =
+				    //  	read(events[i].data.fd, buf, 
+				    //  	    sizeof(buf))) > 0)
+				    //{
+				    //  fwrite(buf, readlen, 1, file);
+				    //}
+				    //fclose(file);
+				    //LOG << "file data recv over!";
+				}	
+			    }
+			}
 		    }
 		    else
 		    {
-		      //解析数据,以#为分割，依次为文件名、文件大小
-		      result = strtok(buf, "#");
-		      if (result)
-		      {
-		          LOG << "file: " << result;
-		          file = fopen(result, "wb");
-		          if (file)
-		          {
-		              result = strtok(0, "#");
-		              if (result)
-		              {
-		          	LOG << "filesize: " << result;
-		              }
-		              //开始读数据
-		              //bzero(buf, sizeof(buf));
-		              //while ((readlen =
-		              //  	read(events[i].data.fd, buf, 
-		              //  	    sizeof(buf))) > 0)
-		              //{
-		              //  fwrite(buf, readlen, 1, file);
-		              //}
-		              //fclose(file);
-		              //LOG << "file data recv over!";
-
-		         }	
-		     }
-	          }
-	      }
-	      else
-	      {
-	          if (readlen == -1 && errno == EAGAIN)
-	          {
-	              continue;
-	          }
-	          else if (readlen == 0)
-	          {
-	              //关闭文件
-	              if (file)
-	              {
-	          	fclose(file);
-	          	file = 0;
-	          	LOG << "file data recv over!";
-	              }
-	              //停止监视
-	              epoll_ctl(efd, EPOLL_CTL_DEL, events[i].data.fd, &ev);
-	              close(events[i].data.fd);
-		      break;
-	          }
-	      }
-		    
+			if (readlen == -1 && errno == EAGAIN)
+			{
+			    continue;
+			}
+			else if (readlen == 0)
+			{
+			    //关闭文件
+			    if (file)
+			    {
+				fclose(file);
+				file = 0;
+				LOG << "file data recv over!";
+			    }
+			    //停止监视
+			    epoll_ctl(efd, EPOLL_CTL_DEL, events[i].data.fd, &ev);
+			    close(events[i].data.fd);
+			    break;
+			}
+		    }
 		}
-           }
-       }
+	    }
+	}
     }
 }
 
