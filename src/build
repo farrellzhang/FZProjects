@@ -1,0 +1,4 @@
+#! /bin/bash
+rm -rf ../bin/fileserver
+rm -rf *.log
+g++ log.cpp server.cpp -o ../bin/fileserver

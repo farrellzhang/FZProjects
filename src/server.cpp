@@ -34,8 +34,8 @@ void FileServer::start()
     bzero(&saddr, sizeof(saddr));
     bzero(&caddr, sizeof(caddr));
     saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(7777);
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    saddr.sin_port = htons(7778);
+    saddr.sin_addr.s_addr = INADDR_ANY;
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (0 > listenfd)
     {
@@ -71,10 +71,12 @@ void FileServer::start()
     LOG << "listen";
     while(1)
     {
-	LOG << "epoll_wait";
+        //LOG << "epoll_wait";
 	nfds = epoll_wait(efd, events, 12, -1);
 	if (nfds < 0)
 	{
+	    if (errno == EINTR)
+		continue;
 	    LOG << "epoll_wait fail: " << errno;
 	}
 	for (i = 0; i < nfds; ++i)
@@ -104,41 +106,74 @@ void FileServer::start()
 	    }
 	    else
 	    {
+		while (1)
+		{
+		    
 		//有数据到来
-		LOG << "fd: " << events[i].data.fd << ", can read!";
 		bzero(buf, sizeof(buf));
 		readlen = read(events[i].data.fd, buf, sizeof(buf));
 		if (readlen > 0)
 		{
-		    //解析数据,以#为分割，依次为文件名、文件大小
-		    result = strtok(buf, "#");
-		    if (result)
+		    if (file)
 		    {
-			LOG << "file: " << result;
-			file = fopen(result, "wb");
-			if (file)
-			{
-			    result = strtok(0, "#");
-			    if (result)
-			    {
-				LOG << "filesize: " << result;
-			    }
-			    //开始读数据
-			    bzero(buf, sizeof(buf));
-			    while ((readlen =
-					read(events[i].data.fd, buf, 
-					    sizeof(buf))) > 0)
-			    {
-				fwrite(buf, readlen, 1, file);
-			    }
-			    fclose(file);
-			    LOG << "file data recv over!";
-
-			}	
+			//直接写数据
+		        fwrite(buf, readlen, 1, file);
 		    }
+		    else
+		    {
+		      //解析数据,以#为分割，依次为文件名、文件大小
+		      result = strtok(buf, "#");
+		      if (result)
+		      {
+		          LOG << "file: " << result;
+		          file = fopen(result, "wb");
+		          if (file)
+		          {
+		              result = strtok(0, "#");
+		              if (result)
+		              {
+		          	LOG << "filesize: " << result;
+		              }
+		              //开始读数据
+		              //bzero(buf, sizeof(buf));
+		              //while ((readlen =
+		              //  	read(events[i].data.fd, buf, 
+		              //  	    sizeof(buf))) > 0)
+		              //{
+		              //  fwrite(buf, readlen, 1, file);
+		              //}
+		              //fclose(file);
+		              //LOG << "file data recv over!";
+
+		         }	
+		     }
+	          }
+	      }
+	      else
+	      {
+	          if (readlen == -1 && errno == EAGAIN)
+	          {
+	              continue;
+	          }
+	          else if (readlen == 0)
+	          {
+	              //关闭文件
+	              if (file)
+	              {
+	          	fclose(file);
+	          	file = 0;
+	          	LOG << "file data recv over!";
+	              }
+	              //停止监视
+	              epoll_ctl(efd, EPOLL_CTL_DEL, events[i].data.fd, &ev);
+	              close(events[i].data.fd);
+		      break;
+	          }
+	      }
+		    
 		}
-	    }
-	}
+           }
+       }
     }
 }
 
@@ -147,6 +182,6 @@ int main()
     LOG << "start";
     FileServer fs;
     fs.start();
-    Log::free_instance();
+    // Log::free_instance();
     return 0;
 }
