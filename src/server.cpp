@@ -92,7 +92,6 @@ void FileServer::start()
 		    //设置为异步
 		    fcntl(connfd, F_SETFL,
 			    fcntl(connfd, F_GETFL)|O_NONBLOCK);
-
 		    //加入等待队列
 		    ev.data.fd = connfd;
 		    ev.events = EPOLLIN | EPOLLET;
@@ -133,16 +132,6 @@ void FileServer::start()
 				    {
 					LOG << "filesize: " << result;
 				    }
-				    //开始读数据
-				    //bzero(buf, sizeof(buf));
-				    //while ((readlen =
-				    //  	read(events[i].data.fd, buf, 
-				    //  	    sizeof(buf))) > 0)
-				    //{
-				    //  fwrite(buf, readlen, 1, file);
-				    //}
-				    //fclose(file);
-				    //LOG << "file data recv over!";
 				}	
 			    }
 			}
