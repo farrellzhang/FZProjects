@@ -1,2 +1,0 @@
-/root/myproject/CMakeFiles/./bin/hellomake.dir
-/root/myproject/CMakeFiles/log.dir
